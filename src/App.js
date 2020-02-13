@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
 import { Input, FormGroup, Label, Modal, ModalHeader, ModalBody, ModalFooter, Table, Button } from 'reactstrap';
+import { BrowserRouter as Router, Link, Switch } from 'react-router-dom';
+import Route from 'react-router-dom/Route';
 import axios from 'axios';
 
 import SearchBox from './SearchBox';
+import Detail from './Detail';
 
 class App extends Component {
     state =
@@ -92,6 +95,7 @@ class App extends Component {
 
         let books = filteredBooks.map((book) => {
             return (
+
                 <tr key={book.id}>
                     <td>{book.id}</td>
                     <td>{book.bookName}</td>
@@ -99,7 +103,7 @@ class App extends Component {
                     <td>{book.publisher}</td>
                     <td>
                         <Button color="warning" size="sm" className="mr-2"
-                        >Ayrıntılar</Button>
+                        ><Link to={"/detail/" + book.id} style={{ color: '#FFF' }}>Ayrıntılar</Link></Button>
 
                         <Button color="success" size="sm" className="mr-2"
                             onClick={this.editBook.bind(this, book.id, book.bookName, book.author, book.publisher)}>Düzenle</Button>
@@ -109,15 +113,73 @@ class App extends Component {
                     </td>
                 </tr>
             )
-        })
+        });
         return (
-            <div className="App container">
-                <h1>Online Kitaplık</h1>
-                <Button className="my-3" color="primary" onClick={this.toggleNewBookModal.bind(this)}>Kitap Ekle</Button>
-                <SearchBox handleInput={this.handleInput} />
-                <Modal isOpen={this.state.newBookModal} toggle={this.toggleNewBookModal.bind(this)} className={this.props.className}>
-                    <ModalHeader toggle={this.toggleNewBookModal.bind(this)}>Yeni Bir Kitap Ekle</ModalHeader>
-                    <ModalBody>
+            <Router >
+                <div className="App container">
+                    <Route path="/" exact strict>
+                        <h1>Online Kitaplık</h1>
+                        {/* <Button className="my-3" color="primary" onClick={this.toggleNewBookModal.bind(this)}
+                            to="/create">Kitap Ekle</Button> */}
+                        <Button color="primary"><Link to="/create" style={{ color: '#FFF' }}>Kitap Ekle</Link></Button>
+                        <SearchBox handleInput={this.handleInput} />
+                        <Table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Başlık</th>
+                                    <th>Yazar</th>
+                                    <th>Yayınevi</th>
+                                    <th>Seçenekler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {books}
+                            </tbody>
+                        </Table >
+                        <Modal isOpen={this.state.editBookModal} toggle={this.toggleEditBookModal.bind(this)} className={this.props.className}>
+                            <ModalHeader toggle={this.toggleEditBookModal.bind(this)}>Bu Kitabı Düzenleyin</ModalHeader>
+                            <ModalBody>
+                                <FormGroup>
+                                    <Label for="baslik">Kitap Adı</Label>
+                                    <Input id="baslik" placeholder="Kitap adını giriniz..." value={this.state.editBookData.bookName}
+                                        onChange={(e) => {
+                                            let { editBookData } = this.state;
+                                            editBookData.bookName = e.target.value;
+                                            this.setState({ editBookData });
+                                        }} />
+                                </FormGroup>
+                                <FormGroup>
+                                    <Label for="yazarAdi">Yazar Adı</Label>
+                                    <Input id="yazarAdi" placeholder="Yazarın adını giriniz..." value={this.state.editBookData.author}
+                                        onChange={(e) => {
+                                            let { editBookData } = this.state;
+                                            editBookData.author = e.target.value;
+                                            this.setState({ editBookData });
+                                        }} />
+                                </FormGroup>
+                                <FormGroup>
+                                    <Label for="yayinEvi">Yayınevi</Label>
+                                    <Input id="yayinEvi" placeholder="Yayınevinin adını giriniz..." value={this.state.editBookData.publisher}
+                                        onChange={(e) => {
+                                            let { editBookData } = this.state;
+                                            editBookData.publisher = e.target.value;
+                                            this.setState({ editBookData });
+                                        }} />
+                                </FormGroup>
+                            </ModalBody>
+                            <ModalFooter>
+                                <Button color="primary" onClick={this.updateBook.bind(this)}>Güncelle</Button>{' '}
+                                <Button color="secondary" onClick={this.toggleEditBookModal.bind(this)}>Çıkış</Button>
+                            </ModalFooter>
+                        </Modal>
+
+                    </Route>
+                    <Route path="/create" exact strict>
+                        <h1>Yeni Bir Kitap Ekle</h1>
+                        {/* <Modal isOpen={this.state.newBookModal} toggle={this.toggleNewBookModal.bind(this)} className={this.props.className}>
+                            <ModalHeader toggle={this.toggleNewBookModal.bind(this)}>Yeni Bir Kitap Ekle</ModalHeader>
+                            <ModalBody> */}
                         <FormGroup>
                             <Label for="baslik">Kitap Adı</Label>
                             <Input id="baslik" placeholder="Kitap adını giriniz..." value={this.state.newBookData.bookName}
@@ -145,65 +207,21 @@ class App extends Component {
                                     this.setState({ newBookData });
                                 }} />
                         </FormGroup>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button color="primary" onClick={this.addBook.bind(this)}>Ekle</Button>{' '}
-                        <Button color="secondary" onClick={this.toggleNewBookModal.bind(this)}>Çıkış</Button>
-                    </ModalFooter>
-                </Modal>
+                        <Button color="primary"><Link onClick={this.addBook.bind(this)} to="/" style={{ color: '#FFF' }}>Kitabı ekle</Link></Button>
+                        {/* </ModalBody>
+                            <ModalFooter>
+                                <Button color="primary" onClick={this.addBook.bind(this)}>Ekle</Button>{' '}
+                                <Button color="secondary" onClick={this.toggleNewBookModal.bind(this)}>Çıkış</Button>
+                            </ModalFooter>
+                        </Modal> */}
+                    </Route>
+                    <Switch>
+                        <Route path='/detail/:id' exact strict component={Detail} />
+                    </Switch>
 
-                <Modal isOpen={this.state.editBookModal} toggle={this.toggleEditBookModal.bind(this)} className={this.props.className}>
-                    <ModalHeader toggle={this.toggleEditBookModal.bind(this)}>Bu Kitabı Düzenleyin</ModalHeader>
-                    <ModalBody>
-                        <FormGroup>
-                            <Label for="baslik">Kitap Adı</Label>
-                            <Input id="baslik" placeholder="Kitap adını giriniz..." value={this.state.editBookData.bookName}
-                                onChange={(e) => {
-                                    let { editBookData } = this.state;
-                                    editBookData.bookName = e.target.value;
-                                    this.setState({ editBookData });
-                                }} />
-                        </FormGroup>
-                        <FormGroup>
-                            <Label for="yazarAdi">Yazar Adı</Label>
-                            <Input id="yazarAdi" placeholder="Yazarın adını giriniz..." value={this.state.editBookData.author}
-                                onChange={(e) => {
-                                    let { editBookData } = this.state;
-                                    editBookData.author = e.target.value;
-                                    this.setState({ editBookData });
-                                }} />
-                        </FormGroup>
-                        <FormGroup>
-                            <Label for="yayinEvi">Yayınevi</Label>
-                            <Input id="yayinEvi" placeholder="Yayınevinin adını giriniz..." value={this.state.editBookData.publisher}
-                                onChange={(e) => {
-                                    let { editBookData } = this.state;
-                                    editBookData.publisher = e.target.value;
-                                    this.setState({ editBookData });
-                                }} />
-                        </FormGroup>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button color="primary" onClick={this.updateBook.bind(this)}>Güncelle</Button>{' '}
-                        <Button color="secondary" onClick={this.toggleEditBookModal.bind(this)}>Çıkış</Button>
-                    </ModalFooter>
-                </Modal>
+                </div >
+            </Router >
 
-                <Table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Başlık</th>
-                            <th>Yazar</th>
-                            <th>Yayınevi</th>
-                            <th>Seçenekler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {books}
-                    </tbody>
-                </Table >
-            </div >
         );
     }
 
